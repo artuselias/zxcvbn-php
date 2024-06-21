@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import argparse
 import sys
 import json as simplejson
 
@@ -10,21 +11,50 @@ usage:
 %s src/Matchers/adjacency_graphs.json
 ''' % sys.argv[0]
 
-qwerty = r'''
+layouts = dict()
+slanted = set()
+
+slanted.add("qwerty_en")
+layouts["qwerty_en"] = r'''
 `~ 1! 2@ 3# 4$ 5% 6^ 7& 8* 9( 0) -_ =+
     qQ wW eE rR tT yY uU iI oO pP [{ ]} \|
      aA sS dD fF gG hH jJ kK lL ;: '"
       zZ xX cC vV bB nN mM ,< .> /?
 '''
 
-dvorak = r'''
+slanted.add("qwerty_es")
+layouts["qwerty_es"] = r'''
+  1! 2" 3  4$ 5% 6& 7/ 8( 9) 0= '? ¡¿
+    qQ wW eE rR tT yY uU iI oO pP    +*
+     aA sS dD fF gG hH jJ kK lL ñÑ    çÇ
+   <> zZ xX cC vV bB nN mM ,< .> /?
+'''
+
+slanted.add("qwertz_de")
+layouts["qwertz_de"] = r'''
+^° 1! 2" 3§ 4$ 5% 6& 7/ 8( 9) 0= ß? ´`
+    qQ wW eE rR tT zZ uU iI oO pP üÜ +*
+     aA sS dD fF gG hH jJ kK lL öÖ äÄ #'
+   <> zZ xX cC vV bB nN mM ,; .: -_
+'''
+
+slanted.add("azerty")
+layouts["azerty"] = r'''
+   &1 é2 "3 '4 (5 -6 è7 _8 ç9 à0 )° =+
+    aA zZ eE rR tT yY uU iI oO pP    $£
+     qQ sS dD fF gG hH jJ kK lL mM ù% *µ
+   <> wW xX cC vV bB nN ,? ;. :/ !§
+'''
+
+slanted.add("dvorak")
+layouts["dvorak"] = r'''
 `~ 1! 2@ 3# 4$ 5% 6^ 7& 8* 9( 0) [{ ]}
     '" ,< .> pP yY fF gG cC rR lL /? =+ \|
      aA oO eE uU iI dD hH tT nN sS -_
       ;: qQ jJ kK xX bB mM wW vV zZ
 '''
 
-keypad = r'''
+layouts["keypad"] = r'''
   / * -
 7 8 9 +
 4 5 6
@@ -32,7 +62,7 @@ keypad = r'''
   0 .
 '''
 
-mac_keypad = r'''
+layouts["mac_keypad"] = r'''
   = / *
 7 8 9 -
 4 5 6 +
@@ -78,7 +108,7 @@ def build_graph(layout_str, slanted):
             position_table[(x,y)] = token
 
     adjacency_graph = {}
-    for (x,y), chars in position_table.iteritems():
+    for (x,y), chars in position_table.items():
         for char in chars:
             adjacency_graph[char] = []
             for coord in adjacency_func(x, y):
@@ -90,16 +120,15 @@ def build_graph(layout_str, slanted):
     return adjacency_graph
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print usage()
-        sys.exit(0)
-    with open(sys.argv[1], 'w') as f:
-        data = {
-            'qwerty':     build_graph(qwerty, True),
-            'dvorak':     build_graph(dvorak, True),
-            'keypad':     build_graph(keypad, False),
-            'mac_keypad': build_graph(mac_keypad, False),
-        }
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filename')
+    parser.add_argument('-l', '--layouts', nargs='*', type=str,
+             help='constructs adjacency_graphs.json from keyboard layouts')
+
+    args = parser.parse_args()
+
+    with open(args.filename, 'w') as f:
+        data = {layout: build_graph(layouts[layout], layout in slanted) for layout in args.layouts}
         simplejson.dump(data, f)
     sys.exit(0)
 

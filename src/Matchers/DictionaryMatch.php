@@ -186,7 +186,7 @@ class DictionaryMatch extends BaseMatch
     protected static function getRankedDictionaries(): array
     {
         if (empty(self::$rankedDictionaries)) {
-            $json = file_get_contents(dirname(__FILE__) . '/frequency_lists.json');
+            $json = file_get_contents(dirname(__FILE__) . '../../data/json/frequency_lists.json');
             $data = json_decode($json, true);
 
             $rankedLists = [];
